@@ -829,6 +829,7 @@ ul {
   margin-bottom: 14px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1001,7 +1002,7 @@ ul {
 /* ========== DELIVERY SECTION ========== */
 .delivery-section {
   padding: 100px 0;
-  background: var(--yellow-light);
+  background: radial-gradient(circle at center, #ffffff 0%, #e1eed4 100%);
   position: relative;
   overflow: hidden;
 }
@@ -1012,7 +1013,7 @@ ul {
   right: -100px;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(240, 192, 64, 0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(74, 124, 64, 0.15), transparent 70%);
   border-radius: 50%;
 }
 
