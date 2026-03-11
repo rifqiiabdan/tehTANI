@@ -1570,6 +1570,10 @@ ul {
     grid-template-columns: 1fr 1fr;
   }
 
+  .km-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .testimonial-card {
     flex: 0 0 calc(50% - 14px);
     min-width: calc(50% - 14px);
@@ -1637,6 +1641,11 @@ ul {
   }
 
   .promo-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .km-cards-grid {
     grid-template-columns: 1fr;
     gap: 20px;
   }
