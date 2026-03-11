@@ -151,14 +151,18 @@
 
     // Responsive rebuild
     let resizeTimer;
+    let lastTestiWidth = window.innerWidth;
     window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        visibleCount = getVisibleCount();
-        currentIndex = 0;
-        buildDots();
-        goTo(0);
-      }, 200);
+      if (window.innerWidth !== lastTestiWidth) {
+        lastTestiWidth = window.innerWidth;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          visibleCount = getVisibleCount();
+          currentIndex = 0;
+          buildDots();
+          goTo(0);
+        }, 200);
+      }
     });
 
     // Init
@@ -167,26 +171,51 @@
     resetAutoSlide();
   }
 
-  /* ── Menu Slider (Auto-scroll with Center Focus) ── */
+  /* ── Menu Slider (Seamless Infinite Loop) ── */
   const menuTrack = document.getElementById('menuTrack');
-  const menuItems = menuTrack ? Array.from(menuTrack.querySelectorAll('.menu-drink-item')) : [];
+  const orgMenuItms = menuTrack ? Array.from(menuTrack.querySelectorAll('.menu-drink-item')) : [];
 
-  if (menuTrack && menuItems.length) {
-    // Start somewhere in the middle (or you can start at 0)
-    let menuIndex = Math.floor(menuItems.length / 2);
+  if (menuTrack && orgMenuItms.length > 0) {
+    const itemWidth = orgMenuItms[0].offsetWidth;
+    const gap = parseInt(window.getComputedStyle(menuTrack).gap) || 20;
+
+    // Create clones for infinite effect (3 at start, 3 at end)
+    const cloneCount = 4;
+    for (let i = 0; i < cloneCount; i++) {
+      const cloneEnd = orgMenuItms[i % orgMenuItms.length].cloneNode(true);
+      cloneEnd.classList.add('clone');
+      menuTrack.appendChild(cloneEnd);
+
+      const cloneStart = orgMenuItms[orgMenuItms.length - 1 - (i % orgMenuItms.length)].cloneNode(true);
+      cloneStart.classList.add('clone');
+      menuTrack.insertBefore(cloneStart, menuTrack.firstChild);
+    }
+
+    // re-fetch all items including clones
+    const menuItems = Array.from(menuTrack.querySelectorAll('.menu-drink-item'));
+
+    // Start index is offset by cloneCount
+    let menuIndex = cloneCount;
     let autoSlideMenuInterval;
+    let isTransitioning = false;
 
-    function updateMenuSlider() {
+    function updateMenuSlider(smooth = true) {
       if (!menuTrack.parentElement) return;
 
       const viewportWidth = menuTrack.parentElement.offsetWidth;
-      const itemWidth = menuItems[0].offsetWidth;
-      // Get gap from CSS, fallback to 20
-      const gap = parseInt(window.getComputedStyle(menuTrack).gap) || 20;
+      // Get gap again in case it changes
+      const currentGap = parseInt(window.getComputedStyle(menuTrack).gap) || 20;
+      const currentItemWidth = menuItems[0].offsetWidth;
 
       // Center the item at menuIndex
-      const itemCenterOffset = (menuIndex * (itemWidth + gap)) + (itemWidth / 2);
+      const itemCenterOffset = (menuIndex * (currentItemWidth + currentGap)) + (currentItemWidth / 2);
       const trackOffset = (viewportWidth / 2) - itemCenterOffset;
+
+      if (smooth) {
+        menuTrack.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+      } else {
+        menuTrack.style.transition = 'none';
+      }
 
       menuTrack.style.transform = `translateX(${trackOffset}px)`;
 
@@ -201,17 +230,37 @@
     }
 
     function slideNextMenu() {
+      if (isTransitioning) return;
       menuIndex++;
-      if (menuIndex >= menuItems.length) {
-        menuIndex = 0; // Loop back
-      }
       updateMenuSlider();
     }
 
-    // Initial setup with short delay to ensure layout is calculated
-    setTimeout(updateMenuSlider, 100);
+    function slidePrevMenu() {
+      if (isTransitioning) return;
+      menuIndex--;
+      updateMenuSlider();
+    }
 
-    // Auto slide every 3 seconds (3000ms)
+    menuTrack.addEventListener('transitionend', () => {
+      isTransitioning = false;
+      // if we've scrolled into the end cloned area
+      if (menuIndex >= menuItems.length - cloneCount) {
+        menuTrack.style.transition = 'none';
+        menuIndex = cloneCount;
+        updateMenuSlider(false);
+      }
+      // if we've scrolled into the start cloned area
+      if (menuIndex < cloneCount) {
+        menuTrack.style.transition = 'none';
+        menuIndex = menuItems.length - cloneCount - 1;
+        updateMenuSlider(false);
+      }
+    });
+
+    // Initial setup
+    setTimeout(() => updateMenuSlider(false), 100);
+
+    // Auto slide
     function startMenuAutoSlide() {
       clearInterval(autoSlideMenuInterval);
       autoSlideMenuInterval = setInterval(slideNextMenu, 3000);
@@ -233,22 +282,23 @@
     menuTrack.addEventListener('touchend', e => {
       const diff = menuTouchStart - e.changedTouches[0].clientX;
       if (Math.abs(diff) > 50) {
-        if (diff > 0 && menuIndex < menuItems.length - 1) {
-          menuIndex++;
-        } else if (diff < 0 && menuIndex > 0) {
-          menuIndex--;
+        if (diff > 0) {
+          slideNextMenu();
         } else {
-          // If at edges, loop to opposite side
-          if (diff > 0) menuIndex = 0;
-          if (diff < 0) menuIndex = menuItems.length - 1;
+          slidePrevMenu();
         }
-        updateMenuSlider();
       }
       startMenuAutoSlide();
     });
 
     // Handle responsive resize centering
-    window.addEventListener('resize', updateMenuSlider);
+    let lastMenuWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+      if (window.innerWidth !== lastMenuWidth) {
+        lastMenuWidth = window.innerWidth;
+        updateMenuSlider(false);
+      }
+    });
   }
 
   /* ── Navbar active link highlight on scroll ── */
