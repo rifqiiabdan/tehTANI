@@ -142,7 +142,7 @@
 
         .menu-grid.centered-row .menu-card {
             width: 100%;
-            max-width: 280px;
+            max-width: 320px; /* Increased to match normal grid items on mobile */
         }
 
         .menu-card {
@@ -153,6 +153,8 @@
             opacity: 0;
             transform: translateY(30px);
             transition: opacity 0.6s ease, transform 0.6s ease;
+            max-width: 320px; /* Added universal max-width */
+            margin: 0 auto;
         }
 
         .menu-card.visible {
@@ -259,10 +261,6 @@
 
             .menu-category-title {
                 font-size: 2.2rem;
-            }
-
-            .menu-img-wrap {
-                aspect-ratio: 4/3;
             }
         }
     </style>
